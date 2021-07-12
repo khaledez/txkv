@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	cli "github.com/khaledez/txkv/cli/internal"
 	"github.com/khaledez/txkv/kv"
 )
 
@@ -20,13 +21,21 @@ func Cli(input io.Reader, output io.Writer, kvStore kv.KeyValueStore, prompt str
 			fmt.Fprint(output, prompt)
 			continue
 		}
-		fmt.Fprintln(output, handler.Handle(kvStore))
+		result := handler.Handle(kvStore)
+		if len(result) > 0 {
+			fmt.Fprintln(output, result)
+		}
 		fmt.Fprint(output, prompt)
 	}
 	return nil
 }
 
 type Command string
+
+type CommandHandler interface {
+	ParseArgs(args []string) error
+	Handle(kvStore kv.KeyValueStore) string
+}
 
 const (
 	GetCommand      = "GET"
@@ -39,9 +48,13 @@ const (
 )
 
 var commands = map[Command]CommandHandler{
-	GetCommand:    &GetCommandHandler{},
-	BeginCommand:  &BeginCommandHandler{},
-	CommitCommand: &CommitCommandHandler{},
+	GetCommand:      &cli.GetCommandHandler{},
+	SetCommand:      &cli.SetCommandHandler{},
+	DeleteCommand:   &cli.DeleteCommandHandler{},
+	CountCommand:    &cli.CountCommandHandler{},
+	BeginCommand:    &cli.BeginCommandHandler{},
+	CommitCommand:   &cli.CommitCommandHandler{},
+	RollbackCommand: &cli.RollbackCommandHandler{},
 }
 
 func parseCommandLine(input string) (CommandHandler, error) {
