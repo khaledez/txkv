@@ -1,7 +1,12 @@
 package main
 
-import "os"
+import (
+	"os"
+
+	"github.com/khaledez/txkv/cli"
+	"github.com/khaledez/txkv/kv"
+)
 
 func main() {
-	Cli(os.Stdin, os.Stdout)
+	cli.Cli(os.Stdin, os.Stdout, kv.NewMemoryStore(), "> ")
 }

@@ -1,10 +1,11 @@
-package main
+package cli
 
 import (
 	"io"
 	"strings"
 	"testing"
 
+	"github.com/khaledez/txkv/kv"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,13 +16,13 @@ func Test_reading_entry_not_exists(t *testing.T) {
 
 	// When ...
 	out := &mockWriter{}
-	err := Cli(MockReader(inputLines), out)
+	err := Cli(mockReader(inputLines), out, kv.NewMemoryStore(), "")
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedOutput, out.Lines()[0])
 }
 
-func MockReader(lines []string) io.Reader {
+func mockReader(lines []string) io.Reader {
 	return strings.NewReader(strings.Join(lines, "\n"))
 }
 
