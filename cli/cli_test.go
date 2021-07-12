@@ -32,7 +32,7 @@ func TestCli(t *testing.T) {
 			out := &mockWriter{}
 			err := Cli(mockReader(testCase.InputLines), out, kv.NewMemoryStore(), "")
 
-			assert.NoError(t, err)
+			assert.Nil(t, err)
 			assert.Equal(t, testCase.ExpectedOutputLines, out.Lines()[:len(out.Lines())-1])
 		})
 	}

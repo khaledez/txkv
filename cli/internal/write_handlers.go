@@ -37,8 +37,6 @@ func (h *DeleteCommandHandler) ParseArgs(args []string) error {
 }
 
 func (h *DeleteCommandHandler) Handle(kvStore kv.KeyValueStore) string {
-	if kvStore.Delete(h.key) {
-		return ""
-	}
-	return "key not set"
+	kvStore.Delete(h.key)
+	return ""
 }
