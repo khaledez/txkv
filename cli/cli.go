@@ -14,13 +14,13 @@ func Cli(input io.Reader, output io.Writer, kvStore kv.KeyValueStore, prompt str
 
 	fmt.Fprint(output, prompt)
 	for scanner.Scan() {
-		instruction, err := parseCommandLine(scanner.Text())
+		handler, err := parseCommandLine(scanner.Text())
 		if err != nil {
 			fmt.Fprintln(output, err)
 			fmt.Fprint(output, prompt)
 			continue
 		}
-		fmt.Fprintln(output, handleCommand(instruction))
+		fmt.Fprintln(output, handler.Handle(kvStore))
 		fmt.Fprint(output, prompt)
 	}
 	return nil
@@ -38,42 +38,22 @@ const (
 	CountCommand    = "COUNT"
 )
 
-type Instruction struct {
-	Cmd  Command
-	Args []string
+var commands = map[Command]CommandHandler{
+	GetCommand:    &GetCommandHandler{},
+	BeginCommand:  &BeginCommandHandler{},
+	CommitCommand: &CommitCommandHandler{},
 }
 
-func parseCommandLine(input string) (Instruction, error) {
+func parseCommandLine(input string) (CommandHandler, error) {
+	if len(input) == 0 {
+		return nil, fmt.Errorf("")
+	}
 	instruction := strings.Fields(input)
 
-	switch strings.ToUpper(instruction[0]) {
-	case GetCommand:
-		if len(instruction[1:]) != 1 {
-			return Instruction{}, fmt.Errorf("GET instruction takes one argument")
-		}
-		return Instruction{GetCommand, instruction[1:]}, nil
-	case SetCommand:
-		if len(instruction[1:]) != 2 {
-			return Instruction{}, fmt.Errorf("SET instruction takes two arguments")
-		}
-		return Instruction{SetCommand, instruction[1:]}, nil
-	case DeleteCommand:
-		if len(instruction[1:]) != 1 {
-			return Instruction{}, fmt.Errorf("DELETE instruction takes one argument")
-		}
-		return Instruction{DeleteCommand, instruction[1:]}, nil
-	case CountCommand:
-		if len(instruction[1:]) != 1 {
-			return Instruction{}, fmt.Errorf("COUNT instruction takes one argument")
-		}
-		return Instruction{CountCommand, instruction[1:]}, nil
-	case BeginCommand:
-		return Instruction{BeginCommand, []string{}}, nil
-	case CommitCommand:
-		return Instruction{CommitCommand, []string{}}, nil
-	case RollbackCommand:
-		return Instruction{RollbackCommand, []string{}}, nil
-	default:
-		return Instruction{}, fmt.Errorf("unkown instruction %s", instruction[0])
+	commandStr := strings.ToUpper(instruction[0])
+
+	if handler, ok := commands[Command(commandStr)]; ok {
+		return handler, handler.ParseArgs(instruction[1:])
 	}
+	return nil, fmt.Errorf("unknown command %s", commandStr)
 }
