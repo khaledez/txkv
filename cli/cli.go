@@ -17,7 +17,9 @@ func Cli(input io.Reader, output io.Writer, kvStore kv.KeyValueStore, prompt str
 	for scanner.Scan() {
 		handler, err := parseCommandLine(scanner.Text())
 		if err != nil {
-			fmt.Fprintln(output, err)
+			if len(err.Error()) > 0 {
+				fmt.Fprintln(output, err)
+			}
 			fmt.Fprint(output, prompt)
 			continue
 		}
